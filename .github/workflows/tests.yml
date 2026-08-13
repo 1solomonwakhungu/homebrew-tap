@@ -1,0 +1,28 @@
+name: Tests
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    strategy:
+      matrix:
+        os: [macos-15, ubuntu-24.04]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Configure tap
+        run: |
+          mkdir -p "$(brew --repository)/Library/Taps/1solomonwakhungu"
+          ln -s "$GITHUB_WORKSPACE" "$(brew --repository)/Library/Taps/1solomonwakhungu/homebrew-tap"
+      - name: Audit formula
+        run: brew audit --strict 1solomonwakhungu/tap/discordcli-agents
+      - name: Install formula
+        run: brew install --build-from-source 1solomonwakhungu/tap/discordcli-agents
+      - name: Test formula
+        run: brew test 1solomonwakhungu/tap/discordcli-agents
