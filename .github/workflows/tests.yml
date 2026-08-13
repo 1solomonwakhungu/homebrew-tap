@@ -13,13 +13,14 @@ jobs:
     strategy:
       matrix:
         os: [macos-15, ubuntu-24.04]
+        formula: [discordcli-agents, gronify]
     runs-on: ${{ matrix.os }}
     steps:
       - name: Set up Homebrew
         uses: Homebrew/actions/setup-homebrew@1f8e202ffddf94def7f42f6fa3a482e821489f9c
       - name: Audit formula
-        run: brew audit --strict 1solomonwakhungu/tap/discordcli-agents
+        run: brew audit --strict 1solomonwakhungu/tap/${{ matrix.formula }}
       - name: Install formula
-        run: brew install --build-from-source 1solomonwakhungu/tap/discordcli-agents
+        run: brew install --build-from-source 1solomonwakhungu/tap/${{ matrix.formula }}
       - name: Test formula
-        run: brew test 1solomonwakhungu/tap/discordcli-agents
+        run: brew test 1solomonwakhungu/tap/${{ matrix.formula }}
