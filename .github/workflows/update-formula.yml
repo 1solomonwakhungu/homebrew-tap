@@ -1,0 +1,35 @@
+name: Update Formula
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  update:
+    runs-on: macos-15
+    steps:
+      - name: Set up Homebrew
+        uses: Homebrew/actions/setup-homebrew@1f8e202ffddf94def7f42f6fa3a482e821489f9c
+      - name: Check for a new PyPI release
+        id: version
+        run: |
+          latest="$(curl --fail --silent --show-error https://pypi.org/pypi/discordcli-agents/json | jq -r .info.version)"
+          current="$(brew info --json=v2 1solomonwakhungu/tap/discordcli-agents | jq -r '.formulae[0].versions.stable')"
+          echo "latest=$latest" >> "$GITHUB_OUTPUT"
+          if [[ "$latest" != "$current" ]]; then
+            echo "update=true" >> "$GITHUB_OUTPUT"
+          fi
+      - name: Update formula and Python resources
+        if: steps.version.outputs.update == 'true'
+        env:
+          HOMEBREW_GITHUB_API_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          brew bump-formula-pr \
+            --no-browse \
+            --strict \
+            --python-package-name discordcli-agents \
+            --version "${{ steps.version.outputs.latest }}" \
+            1solomonwakhungu/tap/discordcli-agents
