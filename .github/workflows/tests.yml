@@ -11,13 +11,20 @@ permissions:
 jobs:
   test:
     strategy:
+      fail-fast: false
       matrix:
         os: [macos-15, ubuntu-24.04]
-        formula: [discordcli-agents, gronify]
+        formula: [discordcli-agents, gronify, openrig]
     runs-on: ${{ matrix.os }}
     steps:
       - name: Set up Homebrew
         uses: Homebrew/actions/setup-homebrew@1f8e202ffddf94def7f42f6fa3a482e821489f9c
+      - name: Remove the runner's openssl@1.1 links
+        # The macOS image links openssl@1.1 into the prefix outside Homebrew's
+        # records (brew unlink removes nothing), which blocks linking openssl@3
+        # when node@22's dependencies are upgraded.
+        if: runner.os == 'macOS'
+        run: find "$(brew --prefix)"/{bin,include,lib,share} -type l -lname '*openssl@1.1*' -print -delete 2>/dev/null || true
       - name: Audit formula
         run: brew audit --strict 1solomonwakhungu/tap/${{ matrix.formula }}
       - name: Install formula
