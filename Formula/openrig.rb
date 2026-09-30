@@ -1,9 +1,9 @@
 class Openrig < Formula
   desc "Local control plane for multi-agent coding topologies"
   homepage "https://github.com/1solomonwakhungu/openrig"
-  url "https://github.com/1solomonwakhungu/openrig/releases/download/v0.6.1-fork.1/openrig-0.6.1-fork.1.tgz"
-  version "0.6.1-fork.1"
-  sha256 "7f0d64dbc97fa9debc92384df81b3b382248e03e6cb8d0377df7672aeedf40f3"
+  url "https://github.com/1solomonwakhungu/openrig/releases/download/v0.6.1-fork.2/openrig-0.6.1-fork.2.tgz"
+  version "0.6.1-fork.2"
+  sha256 "7874239c2d543bed96e9744655dae364970f203b6d7231bc0aa245c47cff505c"
   license "Apache-2.0"
 
   depends_on "node@22"
