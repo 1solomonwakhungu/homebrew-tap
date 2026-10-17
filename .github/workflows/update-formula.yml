@@ -74,13 +74,14 @@ jobs:
               github)
                 latest="$(gh api "repos/$upstream/releases/latest" --jq .tag_name)"
                 latest="${latest#v}"
-                # A release can be published before its assets are uploaded.
-                url="${current_url//"$current"/"$latest"}"
-                if [[ "$url" == "$current_url" ]]; then
+                if [[ "$current_url" != *"$current"* ]]; then
                   echo "::error::The $upstream formula URL doesn't contain its version $current" >&2
                   return 1
                 fi
-                if ! curl --fail --silent --show-error --location --head --retry 3 --output /dev/null "$url"; then
+                # A release can be published before its assets are uploaded.
+                url="${current_url//"$current"/"$latest"}"
+                if [[ -n "$latest" && "$latest" != "$current" ]] &&
+                  ! curl --fail --silent --show-error --location --head --retry 3 --output /dev/null "$url"; then
                   echo "::notice::$upstream $latest has no $url yet" >&2
                   return 0
                 fi
