@@ -5,7 +5,6 @@ class Gronify < Formula
   sha256 "08fb2194e065a5aa4f9d3eccf090af055cd6729191bebbfc96789f379190fd53"
   license "MIT"
 
-  depends_on "fastgron"
   depends_on "node@22"
 
   def install
