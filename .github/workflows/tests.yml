@@ -43,8 +43,14 @@ jobs:
         if: runner.os == 'macOS'
         run: find "$(brew --prefix)"/{bin,include,lib,share} -type l -lname '*openssl@1.1*' -print -delete 2>/dev/null || true
       - name: Audit formula
-        run: brew audit --strict 1solomonwakhungu/tap/${{ matrix.formula }}
+        env:
+          FORMULA: ${{ matrix.formula }}
+        run: brew audit --strict "1solomonwakhungu/tap/$FORMULA"
       - name: Install formula
-        run: brew install --build-from-source 1solomonwakhungu/tap/${{ matrix.formula }}
+        env:
+          FORMULA: ${{ matrix.formula }}
+        run: brew install --build-from-source "1solomonwakhungu/tap/$FORMULA"
       - name: Test formula
-        run: brew test 1solomonwakhungu/tap/${{ matrix.formula }}
+        env:
+          FORMULA: ${{ matrix.formula }}
+        run: brew test "1solomonwakhungu/tap/$FORMULA"
