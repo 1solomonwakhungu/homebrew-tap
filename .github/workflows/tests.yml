@@ -4,6 +4,16 @@ on:
   pull_request:
   push:
     branches: [main]
+  workflow_call:
+    inputs:
+      formulae:
+        description: JSON array of formulae to test. Defaults to every formula.
+        type: string
+        default: ""
+      artifact-pattern:
+        description: Download artifacts matching this pattern into Formula/ before testing.
+        type: string
+        default: ""
 
 permissions:
   contents: read
@@ -14,11 +24,18 @@ jobs:
       fail-fast: false
       matrix:
         os: [macos-15, ubuntu-24.04]
-        formula: [discordcli-agents, gronify, openrig]
+        formula: ${{ fromJSON(inputs.formulae || '["discordcli-agents", "gronify", "openrig"]') }}
     runs-on: ${{ matrix.os }}
     steps:
       - name: Set up Homebrew
         uses: Homebrew/actions/setup-homebrew@1f8e202ffddf94def7f42f6fa3a482e821489f9c
+      - name: Use the updated formulae
+        if: inputs.artifact-pattern != ''
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          pattern: ${{ inputs.artifact-pattern }}
+          merge-multiple: true
+          path: Formula
       - name: Remove the runner's openssl@1.1 links
         # The macOS image links openssl@1.1 into the prefix outside Homebrew's
         # records (brew unlink removes nothing), which blocks linking openssl@3

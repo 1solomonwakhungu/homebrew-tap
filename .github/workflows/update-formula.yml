@@ -1,35 +1,178 @@
-name: Update Formula
+name: Update Formulae
+
+# Checks each formula's upstream daily and lands version bumps on main.
+#
+# This uses only GITHUB_TOKEN. GitHub doesn't start workflows for pushes or
+# pull requests made with GITHUB_TOKEN, and this repository doesn't let
+# Actions open pull requests, so a bump PR would get no CI. Instead, this
+# workflow runs the Tests workflow itself against the bumped formula files
+# and commits them to main only after every audit, install, and test passes.
 
 on:
+  schedule:
+    - cron: "23 7 * * *"
   workflow_dispatch:
+    inputs:
+      formula:
+        description: Only check this formula (leave empty to check all)
+        type: string
+        default: ""
+      dry-run:
+        description: Bump and test, but don't commit to main
+        type: boolean
+        default: false
 
 permissions:
-  contents: write
-  pull-requests: write
+  contents: read
+
+concurrency:
+  group: update-formulae
+  cancel-in-progress: false
 
 jobs:
-  update:
+  check:
+    runs-on: ubuntu-24.04
+    outputs:
+      updates: ${{ steps.check.outputs.updates }}
+      formulae: ${{ steps.check.outputs.formulae }}
+    steps:
+      - name: Set up Homebrew
+        uses: Homebrew/actions/setup-homebrew@1f8e202ffddf94def7f42f6fa3a482e821489f9c
+      - name: Compare formula versions with upstream
+        id: check
+        env:
+          GH_TOKEN: ${{ github.token }}
+          ONLY: ${{ inputs.formula }}
+        run: |
+          set -euo pipefail
+          # formula|source|upstream|python package name (PyPI formulae only)
+          upstreams=(
+            "discordcli-agents|pypi|discordcli-agents|discordcli-agents"
+            "gronify|github|1solomonwakhungu/gronify|"
+            "openrig|github|1solomonwakhungu/openrig|"
+          )
+
+          updates='[]'
+          matched=false
+          for entry in "${upstreams[@]}"; do
+            IFS='|' read -r formula source upstream python_package <<<"$entry"
+            if [[ -n "$ONLY" && "$ONLY" != "$formula" ]]; then
+              continue
+            fi
+            matched=true
+
+            case "$source" in
+              pypi)
+                latest="$(curl --fail --silent --show-error --retry 3 "https://pypi.org/pypi/$upstream/json" | jq -r .info.version)"
+                ;;
+              github)
+                latest="$(gh api "repos/$upstream/releases/latest" --jq .tag_name)"
+                latest="${latest#v}"
+                ;;
+            esac
+            if [[ -z "$latest" || "$latest" == "null" ]]; then
+              echo "::error::Could not read the latest $formula version from $upstream"
+              exit 1
+            fi
+
+            current="$(brew info --json=v2 "1solomonwakhungu/tap/$formula" | jq -r '.formulae[0].versions.stable')"
+            newer="$(brew ruby -e 'puts Version.new(ARGV[1]) > Version.new(ARGV[0])' "$current" "$latest")"
+            echo "$formula: formula $current, upstream $latest"
+
+            if [[ "$newer" == "true" ]]; then
+              updates="$(jq -c \
+                --arg formula "$formula" \
+                --arg version "$latest" \
+                --arg python_package "$python_package" \
+                '. + [{formula: $formula, version: $version, python_package: $python_package}]' <<<"$updates")"
+            fi
+          done
+
+          if [[ "$matched" != "true" ]]; then
+            echo "::error::Unknown formula: $ONLY"
+            exit 1
+          fi
+
+          echo "updates=$updates" >> "$GITHUB_OUTPUT"
+          echo "formulae=$(jq -c 'map(.formula)' <<<"$updates")" >> "$GITHUB_OUTPUT"
+
+  bump:
+    needs: check
+    if: needs.check.outputs.updates != '[]'
+    strategy:
+      fail-fast: false
+      matrix:
+        include: ${{ fromJSON(needs.check.outputs.updates) }}
     runs-on: macos-15
     steps:
       - name: Set up Homebrew
         uses: Homebrew/actions/setup-homebrew@1f8e202ffddf94def7f42f6fa3a482e821489f9c
-      - name: Check for a new PyPI release
-        id: version
-        run: |
-          latest="$(curl --fail --silent --show-error https://pypi.org/pypi/discordcli-agents/json | jq -r .info.version)"
-          current="$(brew info --json=v2 1solomonwakhungu/tap/discordcli-agents | jq -r '.formulae[0].versions.stable')"
-          echo "latest=$latest" >> "$GITHUB_OUTPUT"
-          if [[ "$latest" != "$current" ]]; then
-            echo "update=true" >> "$GITHUB_OUTPUT"
-          fi
-      - name: Update formula and Python resources
-        if: steps.version.outputs.update == 'true'
+      - name: Update ${{ matrix.formula }} to ${{ matrix.version }}
         env:
-          HOMEBREW_GITHUB_API_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          HOMEBREW_GITHUB_API_TOKEN: ${{ github.token }}
+          FORMULA: ${{ matrix.formula }}
+          VERSION: ${{ matrix.version }}
+          PYTHON_PACKAGE: ${{ matrix.python_package }}
         run: |
-          brew bump-formula-pr \
-            --no-browse \
-            --strict \
-            --python-package-name discordcli-agents \
-            --version "${{ steps.version.outputs.latest }}" \
-            1solomonwakhungu/tap/discordcli-agents
+          set -euo pipefail
+          args=(--write-only --no-audit --version "$VERSION")
+          if [[ -n "$PYTHON_PACKAGE" ]]; then
+            # Also regenerates the formula's Python resource blocks.
+            args+=(--python-package-name "$PYTHON_PACKAGE")
+          fi
+          brew bump-formula-pr "${args[@]}" "1solomonwakhungu/tap/$FORMULA"
+          git diff --exit-code --quiet -- "Formula/$FORMULA.rb" && {
+            echo "::error::brew bump-formula-pr left Formula/$FORMULA.rb unchanged"
+            exit 1
+          }
+          git diff -- "Formula/$FORMULA.rb"
+      - name: Upload the updated formula
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: formula-${{ matrix.formula }}
+          path: Formula/${{ matrix.formula }}.rb
+          if-no-files-found: error
+
+  test:
+    needs: [check, bump]
+    uses: ./.github/workflows/tests.yml
+    with:
+      formulae: ${{ needs.check.outputs.formulae }}
+      artifact-pattern: formula-*
+
+  commit:
+    needs: [check, test]
+    if: ${{ !inputs.dry-run }}
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: write
+    steps:
+      - name: Download the updated formulae
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          pattern: formula-*
+          merge-multiple: true
+          path: Formula
+      - name: Commit the updated formulae to main
+        env:
+          GH_TOKEN: ${{ github.token }}
+          UPDATES: ${{ needs.check.outputs.updates }}
+          TESTED_SHA: ${{ github.sha }}
+        run: |
+          set -euo pipefail
+          jq -c '.[]' <<<"$UPDATES" | while read -r update; do
+            formula="$(jq -r .formula <<<"$update")"
+            version="$(jq -r .version <<<"$update")"
+            path="Formula/$formula.rb"
+
+            # The blob from the commit the tests ran on. GitHub rejects the
+            # write if main has changed this file since then.
+            blob="$(gh api "repos/$GITHUB_REPOSITORY/contents/$path?ref=$TESTED_SHA" --jq .sha)"
+
+            jq -n \
+              --arg message "feat: update $formula to $version" \
+              --arg content "$(base64 < "$path" | tr -d '\n')" \
+              --arg sha "$blob" \
+              '{message: $message, content: $content, sha: $sha, branch: "main"}' |
+              gh api --method PUT "repos/$GITHUB_REPOSITORY/contents/$path" --input - --jq .commit.html_url
+          done
