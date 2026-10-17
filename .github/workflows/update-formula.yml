@@ -1,35 +1,164 @@
-name: Update Formula
+name: Update Formulae
+
+# Checks each formula's upstream daily and lands version bumps on main.
+#
+# This uses only GITHUB_TOKEN. GitHub doesn't start workflows for pushes or
+# pull requests made with GITHUB_TOKEN, and this repository doesn't let
+# Actions open pull requests, so a bump PR would get no CI. Instead, each
+# bump runs the Tests workflow itself against the bumped formula file and is
+# committed to main only after its audit, install, and test pass.
+#
+# Each formula is bumped, tested, and committed independently, so one
+# formula's failure doesn't hold back the others.
 
 on:
+  schedule:
+    - cron: "23 7 * * *"
   workflow_dispatch:
+    inputs:
+      formula:
+        description: Only check this formula (leave empty to check all)
+        type: string
+        default: ""
+      dry-run:
+        description: Bump and test, but don't commit to main
+        type: boolean
+        default: false
 
 permissions:
-  contents: write
-  pull-requests: write
+  contents: read
+
+concurrency:
+  group: update-formulae
+  cancel-in-progress: false
 
 jobs:
-  update:
-    runs-on: macos-15
+  check:
+    runs-on: ubuntu-24.04
+    outputs:
+      updates: ${{ steps.check.outputs.updates }}
     steps:
       - name: Set up Homebrew
         uses: Homebrew/actions/setup-homebrew@1f8e202ffddf94def7f42f6fa3a482e821489f9c
-      - name: Check for a new PyPI release
-        id: version
-        run: |
-          latest="$(curl --fail --silent --show-error https://pypi.org/pypi/discordcli-agents/json | jq -r .info.version)"
-          current="$(brew info --json=v2 1solomonwakhungu/tap/discordcli-agents | jq -r '.formulae[0].versions.stable')"
-          echo "latest=$latest" >> "$GITHUB_OUTPUT"
-          if [[ "$latest" != "$current" ]]; then
-            echo "update=true" >> "$GITHUB_OUTPUT"
-          fi
-      - name: Update formula and Python resources
-        if: steps.version.outputs.update == 'true'
+      - name: Compare formula versions with upstream
+        id: check
         env:
-          HOMEBREW_GITHUB_API_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_TOKEN: ${{ github.token }}
+          ONLY: ${{ inputs.formula }}
         run: |
-          brew bump-formula-pr \
-            --no-browse \
-            --strict \
-            --python-package-name discordcli-agents \
-            --version "${{ steps.version.outputs.latest }}" \
-            1solomonwakhungu/tap/discordcli-agents
+          set -euo pipefail
+          # formula|source|upstream|python package name (PyPI formulae only)
+          upstreams=(
+            "discordcli-agents|pypi|discordcli-agents|discordcli-agents"
+            "gronify|github|1solomonwakhungu/gronify|"
+            "openrig|github|1solomonwakhungu/openrig|"
+          )
+
+          # Look up one formula's upstream version. Prints the version when
+          # its release files are downloadable, prints nothing when the
+          # release isn't complete yet, and fails when the lookup fails.
+          latest_version() {
+            local source="$1" upstream="$2" current="$3" current_url="$4" latest url
+            case "$source" in
+              pypi)
+                local json
+                json="$(curl --fail --silent --show-error --retry 3 "https://pypi.org/pypi/$upstream/json")"
+                latest="$(jq -r .info.version <<<"$json")"
+                # bump-formula-pr needs the sdist, which can be uploaded
+                # after the wheels.
+                if ! jq -e 'any(.urls[]; .packagetype == "sdist")' <<<"$json" >/dev/null; then
+                  echo "::notice::$upstream $latest has no sdist on PyPI yet" >&2
+                  return 0
+                fi
+                ;;
+              github)
+                latest="$(gh api "repos/$upstream/releases/latest" --jq .tag_name)"
+                latest="${latest#v}"
+                if [[ "$current_url" != *"$current"* ]]; then
+                  echo "::error::The $upstream formula URL doesn't contain its version $current" >&2
+                  return 1
+                fi
+                # A release can be published before its assets are uploaded.
+                url="${current_url//"$current"/"$latest"}"
+                if [[ -n "$latest" && "$latest" != "$current" ]] &&
+                  ! curl --fail --silent --show-error --location --head --retry 3 --output /dev/null "$url"; then
+                  echo "::notice::$upstream $latest has no $url yet" >&2
+                  return 0
+                fi
+                ;;
+            esac
+            if [[ -z "$latest" || "$latest" == "null" ]]; then
+              echo "::error::Could not read the latest version from $upstream" >&2
+              return 1
+            fi
+            echo "$latest"
+          }
+
+          updates='[]'
+          matched=false
+          failed=false
+          for entry in "${upstreams[@]}"; do
+            IFS='|' read -r formula source upstream python_package <<<"$entry"
+            if [[ -n "$ONLY" && "$ONLY" != "$formula" ]]; then
+              continue
+            fi
+            matched=true
+
+            info="$(brew info --json=v2 "1solomonwakhungu/tap/$formula")"
+            current="$(jq -r '.formulae[0].versions.stable' <<<"$info")"
+            current_url="$(jq -r '.formulae[0].urls.stable.url' <<<"$info")"
+
+            if ! latest="$(latest_version "$source" "$upstream" "$current" "$current_url")"; then
+              echo "::error::Could not check $formula; skipping it"
+              failed=true
+              continue
+            fi
+            if [[ -z "$latest" ]]; then
+              echo "$formula: formula $current, upstream release incomplete; skipping"
+              continue
+            fi
+
+            newer="$(brew ruby -e 'puts Version.new(ARGV[1]) > Version.new(ARGV[0])' "$current" "$latest")"
+            echo "$formula: formula $current, upstream $latest"
+
+            if [[ "$newer" == "true" ]]; then
+              updates="$(jq -c \
+                --arg formula "$formula" \
+                --arg version "$latest" \
+                --arg python_package "$python_package" \
+                '. + [{formula: $formula, version: $version, python_package: $python_package}]' <<<"$updates")"
+            fi
+          done
+
+          if [[ "$matched" != "true" ]]; then
+            echo "::error::Unknown formula: $ONLY"
+            exit 1
+          fi
+
+          echo "updates=$updates" >> "$GITHUB_OUTPUT"
+          if [[ "$updates" == "[]" ]]; then
+            echo "Every formula is up to date."
+          fi
+          # Fail after writing the output so the formulae that were checked
+          # are still bumped.
+          if [[ "$failed" == "true" ]]; then
+            exit 1
+          fi
+
+  update:
+    needs: check
+    if: ${{ !cancelled() && needs.check.outputs.updates != '' && needs.check.outputs.updates != '[]' }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include: ${{ fromJSON(needs.check.outputs.updates) }}
+    # The ceiling for the called workflow. Only its commit job writes.
+    permissions:
+      contents: write
+    uses: ./.github/workflows/bump-formula.yml
+    with:
+      formula: ${{ matrix.formula }}
+      version: ${{ matrix.version }}
+      python-package: ${{ matrix.python_package }}
+      # Commit only what was tested against main.
+      commit: ${{ !inputs.dry-run && github.ref == 'refs/heads/main' }}
