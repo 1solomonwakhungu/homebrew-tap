@@ -1,8 +1,8 @@
 class Gronify < Formula
   desc "Flatten, search, and unflatten JSON from the command-line"
   homepage "https://github.com/1solomonwakhungu/gronify"
-  url "https://github.com/1solomonwakhungu/gronify/releases/download/v1.3.1/gronify-v1.3.1.tar.gz"
-  sha256 "6a6711d383f03386e95a0666c68d019bd08e0f5f83dadbfad0e4524e16dc3247"
+  url "https://github.com/1solomonwakhungu/gronify/releases/download/v1.3.2/gronify-v1.3.2.tar.gz"
+  sha256 "1651535d9af0bc118a7f6fd24161d9dde4d68d893709ade0bb337640e6666e6e"
   license "MIT"
 
   depends_on "node@22"
