@@ -41,7 +41,7 @@ kfleet quickstart
 
 ### Gronify (Formula)
 
-Flatten, search, and unflatten JSON and JSON Lines from the command line ([gronify](https://github.com/1solomonwakhungu/gronify) · [docs](https://gronify.vercel.app)).
+Flatten, search, and unflatten JSON and JSON Lines from the command line ([gronify](https://github.com/1solomonwakhungu/gronify) · [docs](https://gronify.harlo.dev)).
 
 ```bash
 brew install 1solomonwakhungu/tap/gronify
