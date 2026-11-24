@@ -24,7 +24,7 @@ jobs:
       fail-fast: false
       matrix:
         os: [macos-15, ubuntu-24.04]
-        formula: ${{ fromJSON(inputs.formulae || '["discordcli-agents", "gronify", "openrig"]') }}
+        formula: ${{ fromJSON(inputs.formulae || '["compact-ledger", "discordcli-agents", "gronify", "handoff-verify", "openrig", "sidefx"]') }}
     runs-on: ${{ matrix.os }}
     steps:
       - name: Set up Homebrew

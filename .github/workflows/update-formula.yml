@@ -49,9 +49,12 @@ jobs:
           set -euo pipefail
           # formula|source|upstream|python package name (PyPI formulae only)
           upstreams=(
+            "compact-ledger|pypi|compact-ledger|compact-ledger"
             "discordcli-agents|pypi|discordcli-agents|discordcli-agents"
             "gronify|github|1solomonwakhungu/gronify|"
+            "handoff-verify|pypi|handoff-verify|handoff-verify"
             "openrig|github|1solomonwakhungu/openrig|"
+            "sidefx|pypi|sidefx|sidefx"
           )
 
           # Look up one formula's upstream version. Prints the version when
@@ -61,14 +64,26 @@ jobs:
             local source="$1" upstream="$2" current="$3" current_url="$4" latest url
             case "$source" in
               pypi)
-                local json
+                local json sdist_uploaded
                 json="$(curl --fail --silent --show-error --retry 3 "https://pypi.org/pypi/$upstream/json")"
                 latest="$(jq -r .info.version <<<"$json")"
                 # bump-formula-pr needs the sdist, which can be uploaded
                 # after the wheels.
-                if ! jq -e 'any(.urls[]; .packagetype == "sdist")' <<<"$json" >/dev/null; then
+                sdist_uploaded="$(jq -r '[.urls[] | select(.packagetype == "sdist")][0].upload_time_iso_8601 // ""' <<<"$json")"
+                if [[ -z "$sdist_uploaded" ]]; then
                   echo "::notice::$upstream $latest has no sdist on PyPI yet" >&2
                   return 0
+                fi
+                # Homebrew's PyPI resource resolver enforces a 1-day cooldown
+                # (--uploaded-prior-to=P1D). Wait until the sdist ages past
+                # 24h instead of failing the daily check.
+                if [[ -n "$latest" && "$latest" != "$current" ]]; then
+                  local age_seconds
+                  age_seconds="$(python3 -c 'import datetime, sys; ts = datetime.datetime.fromisoformat(sys.argv[1].replace("Z", "+00:00")); print(int((datetime.datetime.now(datetime.timezone.utc) - ts).total_seconds()))' "$sdist_uploaded")"
+                  if (( age_seconds < 86400 )); then
+                    echo "::notice::$upstream $latest was uploaded less than 24h ago; waiting for Homebrew's PyPI cooldown" >&2
+                    return 0
+                  fi
                 fi
                 ;;
               github)
