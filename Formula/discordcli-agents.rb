@@ -3,8 +3,8 @@ class DiscordcliAgents < Formula
 
   desc "Manage and automate Discord servers from the command-line"
   homepage "https://github.com/1solomonwakhungu/discord-cli"
-  url "https://files.pythonhosted.org/packages/62/28/4f906186061a1d9fe638d3dae034f9eaf55e6408e0224a9b79c9aec0fed7/discordcli_agents-1.4.0.tar.gz"
-  sha256 "54f54bcea5770a30ed10619fb0206a50772b36fa3af8a9d6e7e2d56551528572"
+  url "https://files.pythonhosted.org/packages/33/fb/4c4b2ce4a890d8eebe263bf52e893926d3345e5c3b454210101d82598b39/discordcli_agents-1.6.0.tar.gz"
+  sha256 "8bf4aa24006fa9fe9b5452ff1da089a570b542f3ee15abb7cff1d6846a64133c"
   license "MIT"
 
   depends_on "python@3.14"
@@ -35,8 +35,8 @@ class DiscordcliAgents < Formula
   end
 
   resource "click" do
-    url "https://files.pythonhosted.org/packages/c7/0e/7fa0ef50764b67090eca4114772a2abf8b6148198475e54c660b97caeee6/click-8.5.0.tar.gz"
-    sha256 "ba0d2089de75ea0310e2dde03160e6ca10009947fb95a182f9b54021bb272e34"
+    url "https://files.pythonhosted.org/packages/45/37/edbf1b0707709013c0cf2e8317e03d97ed29bf4cac709fe328904ae92a38/click-8.5.1.tar.gz"
+    sha256 "9bbfada76703fd1d784b83eea012e3e8c6a001a876543ef104fa56aaaeb072b4"
   end
 
   resource "discord-py" do
@@ -55,8 +55,8 @@ class DiscordcliAgents < Formula
   end
 
   resource "markdown-it-py" do
-    url "https://files.pythonhosted.org/packages/06/ff/7841249c247aa650a76b9ee4bbaeae59370dc8bfd2f6c01f3630c35eb134/markdown_it_py-4.2.0.tar.gz"
-    sha256 "04a21681d6fbb623de53f6f364d352309d4094dd4194040a10fd51833e418d49"
+    url "https://files.pythonhosted.org/packages/16/fc/cee2c45553c9a9bf77d8b0c391560c556d7ed756b1f0bb35eb5d48db09ea/markdown_it_py-4.3.0.tar.gz"
+    sha256 "91a58fa5b72c71a40cf7177250fd767480d7a2bb3ac426ccfb76fb90305fdaaa"
   end
 
   resource "mdurl" do
@@ -65,8 +65,8 @@ class DiscordcliAgents < Formula
   end
 
   resource "multidict" do
-    url "https://files.pythonhosted.org/packages/f9/79/84ddb5ba16c4eb2c69c71db76ae3c579fe546e511f7170c7e27eedbab7c1/multidict-7.1.0.tar.gz"
-    sha256 "61a4e5d81b8d4e4ad61964b230129e7a2b914793d96289029078fc9009f074ec"
+    url "https://files.pythonhosted.org/packages/7b/6b/29ef8e752f5854dcc267ded0652c475bec99b86f255957a0d4fcad657b18/multidict-7.2.1.tar.gz"
+    sha256 "e8af3e6f1bdbc31fd762b094133b478b89988eaebc63cbe82b1d9e3bbd15cede"
   end
 
   resource "propcache" do
