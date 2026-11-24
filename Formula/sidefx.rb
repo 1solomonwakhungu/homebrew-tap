@@ -3,8 +3,8 @@ class Sidefx < Formula
 
   desc "Outbound effects journal, MCP proxy, and receipts for AI agents"
   homepage "https://github.com/1solomonwakhungu/sidefx"
-  url "https://files.pythonhosted.org/packages/f3/13/96c26ba703f6ddf7eacc195cfb0eedf0d0bdd66304d479341bd6073a3474/sidefx-0.1.0.tar.gz"
-  sha256 "7e377dffcd34e8ebebc04cd18f0afe61d8672f108348b8de70c973dada40702c"
+  url "https://files.pythonhosted.org/packages/60/7b/f0eb9fc60d83149ace9e3dd7cc80276c0fa2ad2bfedc0c86f3e7a82e0891/sidefx-0.1.2.tar.gz"
+  sha256 "4309563bd9053660181ff28b00dd985a0d595ae5e964be9ecc8d0d3c286dc4e7"
   license "MIT"
 
   depends_on "python@3.14"

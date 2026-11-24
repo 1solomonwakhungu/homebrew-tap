@@ -10,9 +10,9 @@ Concise release and announcement copy for `brew tap 1solomonwakhungu/tap`.
 
 `brew tap 1solomonwakhungu/tap` adds three dependency-free Python CLIs for verifying agent handoffs, keeping pins through compaction, and preventing duplicate external writes — alongside `openrig`, `kfleet`, `gronify`, and `discordcli-agents`:
 
-- **`handoff-verify`** (`v0.1.0`) — Deterministic, zero-LLM claim and scope verifier for AI coding agents and subagents. Checks cited `path:line` pointers, quoted snippets, and absence/completeness claims against tool-call transcripts.
-- **`compact-ledger`** (`v0.1.0`) — Deterministic `PreCompact` and `SessionStart` memory injector that preserves verbatim user pins, superseding corrections, failing-test trajectories, and edit-thrash warnings across compaction.
-- **`sidefx`** (`v0.1.0`) — Outbound effects journal, transparent stdio MCP proxy, CLI mutation wrapper, crash reconciler, and ground-truth session receipts backed by SQLite WAL.
+- **`handoff-verify`** (`v0.1.1`) — Deterministic, zero-LLM claim and scope verifier for AI coding agents and subagents. Checks cited `path:line` pointers, quoted snippets, and absence/completeness claims against tool-call transcripts.
+- **`compact-ledger`** (`v0.1.1`) — Deterministic `PreCompact` and `SessionStart` memory injector that preserves verbatim user pins, superseding corrections, failing-test trajectories, and edit-thrash warnings across compaction.
+- **`sidefx`** (`v0.1.2`) — Outbound effects journal, transparent stdio MCP proxy, CLI mutation wrapper, crash reconciler, and ground-truth session receipts backed by SQLite WAL.
 
 #### Install
 

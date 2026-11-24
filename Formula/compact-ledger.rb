@@ -3,8 +3,8 @@ class CompactLedger < Formula
 
   desc "Deterministic PreCompact and SessionStart memory ledger for AI agents"
   homepage "https://github.com/1solomonwakhungu/compact-ledger"
-  url "https://files.pythonhosted.org/packages/03/b1/58d34eeda0ec98a09e8fb61396177c11634c9b9aea7ff8c2bd298e522a64/compact_ledger-0.1.0.tar.gz"
-  sha256 "0a9cc7743b3da82d326485b7e8a81897200ea0c2789e031e678b5efd66cedbfe"
+  url "https://files.pythonhosted.org/packages/b4/7f/06b29a7c9ad06329669bdc061d838eb10c01d1a37ea7af916bd797315eb4/compact_ledger-0.1.1.tar.gz"
+  sha256 "b0b6b5a7e34391afb9177e8a3b60220b91bdb5b34b574edbab3bda0df3e0887f"
   license "MIT"
 
   depends_on "python@3.14"
