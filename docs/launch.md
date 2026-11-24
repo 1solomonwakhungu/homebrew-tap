@@ -8,7 +8,7 @@ Concise release and announcement copy for `brew tap 1solomonwakhungu/tap`.
 
 ### What's new in `1solomonwakhungu/homebrew-tap`
 
-`brew tap 1solomonwakhungu/tap` now ships the complete developer and AI-agent CLI suite in one Homebrew tap — including three new zero-dependency, deterministic agent reliability tools alongside `openrig`, `kfleet`, `gronify`, and `discordcli-agents`:
+`brew tap 1solomonwakhungu/tap` adds three dependency-free Python CLIs for verifying agent handoffs, keeping pins through compaction, and preventing duplicate external writes — alongside `openrig`, `kfleet`, `gronify`, and `discordcli-agents`:
 
 - **`handoff-verify`** (`v0.1.0`) — Deterministic, zero-LLM claim and scope verifier for AI coding agents and subagents. Checks cited `path:line` pointers, quoted snippets, and absence/completeness claims against tool-call transcripts.
 - **`compact-ledger`** (`v0.1.0`) — Deterministic `PreCompact` and `SessionStart` memory injector that preserves verbatim user pins, superseding corrections, failing-test trajectories, and edit-thrash warnings across compaction.
@@ -36,7 +36,7 @@ brew install --cask kfleet
 
 ## Short Social / Announcement Copy
 
-Shipped the full AI-agent & developer CLI suite to one Homebrew tap:
+Added three zero-dependency Python CLIs for AI coding agents to `1solomonwakhungu/homebrew-tap`:
 
 ```bash
 brew tap 1solomonwakhungu/tap
@@ -44,6 +44,6 @@ brew install handoff-verify compact-ledger sidefx openrig gronify discordcli-age
 brew install --cask kfleet
 ```
 
-Three deterministic, zero-LLM, zero-dependency Python CLIs (`handoff-verify`, `compact-ledger`, `sidefx`) for verifiable agent handoffs, compaction-proof pins, and idempotent external writes — plus `openrig`, `kfleet`, `gronify`, and `discord-cli`, all tested end-to-end on macOS and Linux.
+Verify agent handoffs (`handoff-verify`), keep pins across compaction (`compact-ledger`), and prevent duplicate external writes (`sidefx`) — plus `openrig`, `kfleet`, `gronify`, and `discord-cli`, with all six formulae tested from source on macOS and Linux.
 
 Repository: https://github.com/1solomonwakhungu/homebrew-tap

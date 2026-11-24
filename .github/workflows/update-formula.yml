@@ -39,7 +39,7 @@ jobs:
       updates: ${{ steps.check.outputs.updates }}
     steps:
       - name: Set up Homebrew
-        uses: Homebrew/actions/setup-homebrew@61b401267256bb9c047d6d1481b176d5772a0ba7
+        uses: Homebrew/actions/setup-homebrew@61b401267256bb9c047d6d1481b176d5772a0ba7 # 2026.11.23.1
       - name: Compare formula versions with upstream
         id: check
         env:
@@ -129,7 +129,7 @@ jobs:
               continue
             fi
             if [[ -z "$latest" ]]; then
-              echo "$formula: formula $current, upstream release incomplete; skipping"
+              echo "$formula: formula $current, no bumpable release yet (missing sdist, asset, or inside 24h PyPI cooldown); skipping"
               continue
             fi
 

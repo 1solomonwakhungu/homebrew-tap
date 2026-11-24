@@ -43,7 +43,7 @@ brew install --cask 1solomonwakhungu/tap/kfleet
 
 ### AI agent reliability suite
 
-Three pure-Python, zero-dependency, deterministic CLIs built to eliminate the most common failure modes in long-running AI coding agents and subagents — no LLM calls, no network required.
+Three dependency-free Python CLIs for verifying agent handoffs, keeping pins across compaction, and preventing duplicate external writes — local, deterministic, and requiring no LLM calls.
 
 #### handoff-verify (Formula)
 
@@ -66,8 +66,10 @@ Deterministic `PreCompact` and `SessionStart` memory injector for AI coding agen
 ```bash
 brew install 1solomonwakhungu/tap/compact-ledger
 compact-ledger --version
-compact-ledger pin "Never touch migrations/"
+compact-ledger pin --session-id demo "Never touch migrations/"
 ```
+
+(Inside Claude Code, `--session-id` can be omitted — `compact-ledger` reads `$CLAUDE_CODE_SESSION_ID` automatically.)
 
 - **Executable:** `compact-ledger`
 - **Dependencies:** `python@3.14` (zero third-party Python dependencies; installed inside an isolated Homebrew virtualenv)
@@ -107,7 +109,7 @@ kfleet quickstart
 
 #### OpenRig (Formula)
 
-Local control plane for multi-agent coding topologies ([1solomonwakhungu/openrig](https://github.com/1solomonwakhungu/openrig)), Solomon's fork with native runtime adapters for OpenCode, Kilo, GitHub Copilot CLI, Cursor CLI, Gemini CLI, Qwen Code, Cline, Aider, Grok Build, and Antigravity CLI.
+Local control plane for multi-agent coding topologies ([1solomonwakhungu/openrig](https://github.com/1solomonwakhungu/openrig)), Solomon's fork supporting registry runtimes including OpenCode, Kilo, GitHub Copilot CLI, Cursor CLI, Gemini CLI, Qwen Code, Cline, Aider, Goose, Kiro, Grok Build, and Antigravity CLI.
 
 ```bash
 brew install 1solomonwakhungu/tap/openrig

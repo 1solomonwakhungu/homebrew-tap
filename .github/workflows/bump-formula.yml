@@ -29,7 +29,7 @@ jobs:
     runs-on: macos-15
     steps:
       - name: Set up Homebrew
-        uses: Homebrew/actions/setup-homebrew@61b401267256bb9c047d6d1481b176d5772a0ba7
+        uses: Homebrew/actions/setup-homebrew@61b401267256bb9c047d6d1481b176d5772a0ba7 # 2026.11.23.1
       - name: Update the formula
         env:
           HOMEBREW_GITHUB_API_TOKEN: ${{ github.token }}

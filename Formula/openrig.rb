@@ -11,6 +11,8 @@ class Openrig < Formula
 
   uses_from_macos "python" => :build
 
+  conflicts_with "rig", because: "both install a `rig` binary"
+
   def install
     node = Formula["node@22"]
     ENV.prepend_path "PATH", node.opt_bin
