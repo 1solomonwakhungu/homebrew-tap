@@ -3,8 +3,8 @@ class DiscordcliAgents < Formula
 
   desc "Manage and automate Discord servers from the command-line"
   homepage "https://github.com/1solomonwakhungu/discord-cli"
-  url "https://files.pythonhosted.org/packages/33/fb/4c4b2ce4a890d8eebe263bf52e893926d3345e5c3b454210101d82598b39/discordcli_agents-1.6.0.tar.gz"
-  sha256 "8bf4aa24006fa9fe9b5452ff1da089a570b542f3ee15abb7cff1d6846a64133c"
+  url "https://files.pythonhosted.org/packages/02/51/46267ca8b1b672951a339063fd894ab8c9f0d89a0332a7cbb21a6f72e70b/discordcli_agents-1.9.0.tar.gz"
+  sha256 "645389a758b62edd04fabfcfddb5650627df4d36a4b38fd96adb873784231caf"
   license "MIT"
 
   depends_on "python@3.14"
